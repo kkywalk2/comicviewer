@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 
 class WebDavClient {
   late final String domainUrl;
@@ -113,5 +116,23 @@ class WebDavClient {
     }
 
     return items;
+  }
+
+  Future<String> downloadFile(String filePath) async {
+    final bytes = await getImage(filePath);
+    final tempDir = await getTemporaryDirectory();
+    final fileName = path.basename(filePath);
+    final localPath = path.join(tempDir.path, 'comicviewer_downloads', fileName);
+    
+    // Create directory if it doesn't exist
+    final downloadDir = Directory(path.dirname(localPath));
+    if (!await downloadDir.exists()) {
+      await downloadDir.create(recursive: true);
+    }
+    
+    // Write file
+    final file = File(localPath);
+    await file.writeAsBytes(bytes);
+    return localPath;
   }
 }
